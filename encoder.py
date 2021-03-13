@@ -35,6 +35,18 @@ class HuffmanEncoder():
         ##### Save binary file
         self.__save_binary_file()
 
+
+    def show_average_rate(self):
+        ##### Show entire bitstream length
+        print(f"Bitstream length: {len(self.bitstream.__str__())} bits;")
+        ##### Show entire bitstream without header
+        print(f"Bitstream length without header: {len(self.bitstream.__str__()) - self.header_length} bits;")
+        ##### Compute Average Rate
+        bitstream_length = len(self.bitstream.__str__())
+        symbols_encoded = len(self.byte_array)
+        mean_rate = bitstream_length/symbols_encoded
+        print(f"Average rate: {mean_rate:.5f} bits per symbol.")
+        
     
     ########## Private Methods
     def __get_source_info(self):
@@ -84,6 +96,9 @@ class HuffmanEncoder():
             self.bitstream.write(get_bool_list(len(difference_digits)))
             for digit in difference_digits:
                 self.bitstream.write(get_bool_list(int(digit)))
+
+        ##### Get header length
+        self.header_length = len(self.bitstream.__str__())
 
 
     def __encode_with_adaptative_hc(self):
@@ -169,3 +184,4 @@ if __name__ == "__main__":
     ##### Encode source.
     encoder = HuffmanEncoder(args.file_to_compress, args.binary_file_path)
     encoder.encode_source()
+    encoder.show_average_rate()
