@@ -1,14 +1,16 @@
 import os
 import sys
-import cv2 
+import cv2
+import time
 import argparse
 import numpy as np
 
 from PIL import Image
+from tqdm import tqdm
 from pathlib import Path
 from bitstream import BitStream
 
-import adaptativebinarytree as abt
+from adaptativebinarytree import AdaptativeBinaryTree
 
 
 class HuffmanEncoder():
@@ -18,7 +20,7 @@ class HuffmanEncoder():
         self.bitstream_path = bitstream_path
         
         # NOTE: It will be adopted as standard to use bytes as symbols.
-        self.adaptative_binary_tree = abt.AdaptativeBinaryTree(2**8)
+        self.adaptative_binary_tree = AdaptativeBinaryTree(2**8)
 
 
     def encode_source(self):
@@ -90,11 +92,14 @@ class HuffmanEncoder():
             bool_list = list(map(lambda bit: bool(int(bit)), list(string)))
             return bool_list
 
+        ##### Measure encoding time.
+        encoding_start = time.time()
+
         ##### Encode first symbol
         self.adaptative_binary_tree.insert_symbol(self.byte_array[0])
         self.bitstream.write(self.byte_array[0], np.uint8)
         ##### Encode remaining bitstream.
-        for byte in self.byte_array[1:]:
+        for byte in tqdm(self.byte_array[1:], desc="Encoding Progress"):
             ##### Get symbol codeword
             byte_codeword = self.adaptative_binary_tree.get_symbol_codeword(byte)
             ##### If symbol is new, codeword for NYT and symbol's byte should be sent.
@@ -108,6 +113,9 @@ class HuffmanEncoder():
             ##### After getting the codeword, update Tree.
             self.adaptative_binary_tree.insert_symbol(byte)
 
+        encoding_finish = time.time()
+        self.__print_process_duration(encoding_start, encoding_finish, "Encoding Process")
+
 
     def __save_binary_file(self):
         with open(self.bitstream_path, "wb") as bin_file:
@@ -115,10 +123,29 @@ class HuffmanEncoder():
             bin_file.close()
 
 
+    def __print_process_duration(self, starting_time, ending_time, process_name):
+
+        def check_plural(value, string):
+            string += 's' if value > 1 else ''
+            return string
+        
+        time_difference = int(ending_time - starting_time)
+        seconds = time_difference % 60
+        minutes = (time_difference // 60) % 60
+        hours = (time_difference // 60) // 60
+        
+        hours_string = check_plural(hours, f'{hours} hour') + ', ' if hours else ''
+        minutes_string = check_plural(minutes, f'{minutes} minute') + ', ' if minutes else ''
+        seconds_string = 'and ' + check_plural(seconds, f'{seconds} second') if seconds else 'and 0 second'
+
+        print(process_name + ' took ' + hours_string + minutes_string + seconds_string + '.')
+
+
+
 
 if __name__ == "__main__":
     ##### Receives file to be compressed from command line.
-    parser = argparse.ArgumentParser(description="Receives file to be encoder and binary filepath.")
+    parser = argparse.ArgumentParser(description="Receives file to be encoded and binary filepath.")
     
     parser.add_argument('--file_to_compress', required=True, help='Path to file to be compressed.')
     parser.add_argument('--binary_file_path', required=False, help="Path to save binary file. "

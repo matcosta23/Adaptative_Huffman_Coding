@@ -18,6 +18,7 @@ class AdaptativeBinaryTree():
         self.root_node_number = 2 * code_length - 1
         root_node = Node("NYT", 0, self.root_node_number)
         self.nodes = np.array([root_node])
+        self.last_searched_index = 0
 
 
     def insert_symbol(self, symbol):
@@ -33,7 +34,7 @@ class AdaptativeBinaryTree():
                 self.sibling_property()
 
             self.update_weights()
-            self.update_weights if self.sibling_property() else None
+            self.update_weights() if self.sibling_property() else None
 
     
     def get_symbol_codeword(self, symbol):
@@ -47,6 +48,18 @@ class AdaptativeBinaryTree():
     def get_codeword_for_nyt(self):
         return self.nodes[-1].bitstream
 
+
+    def get_symbol_from_codeword(self, codeword):       
+        for node_idx in range(self.last_searched_index + 1, len(self.nodes)):
+            node = self.nodes[node_idx]
+            if node.bitstream == codeword:
+                if node.symbol is not 'IN':
+                    self.last_searched_index = 0
+                    return node.symbol
+                else:
+                    self.last_searched_index = node_idx
+                    return None
+    
     
     def insert_first_symbol(self, symbol):
         self.nodes[0].symbol = "IN"
@@ -72,12 +85,11 @@ class AdaptativeBinaryTree():
         node_with_smallest_weight = self.nodes[1]
         node_with_greater_weight = None
 
-        for node in self.nodes[2:]:
+        for node in self.nodes[2:-1]:
             if node.weight < node_with_smallest_weight.weight:
                 node_with_smallest_weight = node
             elif node.weight > node_with_smallest_weight.weight:
                 node_with_greater_weight = node
-                break
         
         if node_with_greater_weight is not None:
             self.vectorized_prefix_replacing(node_with_smallest_weight.bitstream, node_with_greater_weight.bitstream)
