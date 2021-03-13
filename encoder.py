@@ -22,8 +22,14 @@ class HuffmanEncoder():
 
 
     def encode_source(self):
+        ##### Get info about the source
         self.__get_source_info()
-        self.__generate_bitstream()
+        ##### Instantiate bitstream
+        self.bitstream = BitStream()
+        ##### Encode Header
+        self.__encode_header()
+        ##### Encode source with Adaptative Huffman Coding.
+        self.__encode_with_adaptative_hc()
 
     
     ########## Private Methods
@@ -44,18 +50,13 @@ class HuffmanEncoder():
             self.byte_array = image_array.flatten()
 
 
-    def __generate_bitstream(self):
-        ##### Instantiate bitstream
-        self.bitstream = BitStream()
-
-        ##### Encode Header
-        self.__encode_header()
-
-        ##### Encode source with Adaptative Huffman Coding.
-        #self.__encode_with_adaptative_hc()
-
-
     def __encode_header(self):
+        ##### Define Auxiliary Function.
+        def get_bool_list(value):
+            bit_list = list('{0:04b}'.format(value))
+            bool_list = list(map(lambda bit: True if bit == '1' else False, bit_list))
+            return bool_list
+
         # NOTE: A flag is required to indicate whether it is an image.
         image_file = True if self.shape else False
         self.bitstream.write(image_file)
@@ -76,19 +77,34 @@ class HuffmanEncoder():
             difference_digits = list(str(dimension_difference))
             
             # NOTE: The amount of digits and the digit will be written with 4 bits.
-            self.bitstream.write(self.__get_bool_list(len(difference_digits)))
+            self.bitstream.write(get_bool_list(len(difference_digits)))
             for digit in difference_digits:
-                self.bitstream.write(self.__get_bool_list(int(digit)))
-
-        
-    def __get_bool_list(self, value):
-        bit_list = list('{0:04b}'.format(value))
-        bool_list = list(map(lambda bit: True if bit == '1' else False, bit_list))
-        return bool_list
+                self.bitstream.write(get_bool_list(int(digit)))
 
 
-    # def __encode_with_adaptative_hc(self):
-    #     print(type(self.byte_array))
+    def __encode_with_adaptative_hc(self):
+        ##### Define Auxiliary Function.
+        def convert_string_to_boolean_list(string):
+            bool_list = list(map(lambda bit: bool(int(bit)), list(string)))
+            return bool_list
+
+        ##### Encode first symbol
+        self.adaptative_binary_tree.insert_symbol(self.byte_array[0])
+        self.bitstream.write(self.byte_array[0], np.uint8)
+        ##### Encode remaining bitstream.
+        for byte in self.byte_array[1:]:
+            ##### Get symbol codeword
+            byte_codeword = self.adaptative_binary_tree.get_symbol_codeword(byte)
+            ##### If symbol is new, codeword for NYT and symbol's byte should be sent.
+            if byte_codeword is None:
+                nyt_codeword = self.adaptative_binary_tree.get_codeword_for_nyt()
+                self.bitstream.write(convert_string_to_boolean_list(nyt_codeword))
+                self.bitstream.write(byte, np.uint8)
+            ##### If symbol exists, send its codeword.
+            else:
+                self.bitstream.write(convert_string_to_boolean_list(byte_codeword))
+            ##### After getting the codeword, update Tree.
+            self.adaptative_binary_tree.insert_symbol(byte)
 
 
 
@@ -117,4 +133,4 @@ if __name__ == "__main__":
     
     ##### Encode source.
     encoder = HuffmanEncoder(args.file_to_compress, args.binary_file_path)
-    encoder.encode_source()    
+    encoder.encode_source()

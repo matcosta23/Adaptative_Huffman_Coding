@@ -33,8 +33,19 @@ class AdaptativeBinaryTree():
                 self.sibling_property()
 
             self.update_weights()
-            self.sibling_property()
-            self.update_weights()
+            self.update_weights if self.sibling_property() else None
+
+    
+    def get_symbol_codeword(self, symbol):
+        node = next((node for node in self.nodes if node.symbol == symbol), None)
+        try:
+            return node.bitstream
+        except:
+            return None
+
+
+    def get_codeword_for_nyt(self):
+        return self.nodes[-1].bitstream
 
     
     def insert_first_symbol(self, symbol):
@@ -58,10 +69,10 @@ class AdaptativeBinaryTree():
 
 
     def sibling_property(self):
-        node_with_smallest_weight = self.nodes[0]
+        node_with_smallest_weight = self.nodes[1]
         node_with_greater_weight = None
 
-        for node in self.nodes[1:]:
+        for node in self.nodes[2:]:
             if node.weight < node_with_smallest_weight.weight:
                 node_with_smallest_weight = node
             elif node.weight > node_with_smallest_weight.weight:
@@ -71,6 +82,10 @@ class AdaptativeBinaryTree():
         if node_with_greater_weight is not None:
             self.vectorized_prefix_replacing(node_with_smallest_weight.bitstream, node_with_greater_weight.bitstream)
             self.correct_node_numbers()
+            ##### Return True to sinalize that a new weight update is required
+            return True
+        
+        return False
 
 
     def update_weights(self):
