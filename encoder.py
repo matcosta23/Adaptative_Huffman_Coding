@@ -30,6 +30,8 @@ class HuffmanEncoder():
         self.__encode_header()
         ##### Encode source with Adaptative Huffman Coding.
         self.__encode_with_adaptative_hc()
+        ##### Save binary file
+        self.__save_binary_file()
 
     
     ########## Private Methods
@@ -105,6 +107,12 @@ class HuffmanEncoder():
                 self.bitstream.write(convert_string_to_boolean_list(byte_codeword))
             ##### After getting the codeword, update Tree.
             self.adaptative_binary_tree.insert_symbol(byte)
+
+
+    def __save_binary_file(self):
+        with open(self.bitstream_path, "wb") as bin_file:
+            bin_file.write(self.bitstream.__str__().encode())
+            bin_file.close()
 
 
 
