@@ -34,7 +34,11 @@ class AdaptativeBinaryTree():
                 self.sibling_property()
 
             self.update_weights()
-            self.update_weights() if self.sibling_property() else None
+            nodes_replaced = self.sibling_property()
+            while nodes_replaced:
+                self.update_weights()
+                nodes_replaced = self.sibling_property()
+            #self.update_weights() if self.sibling_property() else None
 
     
     def get_symbol_codeword(self, symbol):
