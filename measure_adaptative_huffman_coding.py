@@ -3,31 +3,31 @@ import sys
 import math
 import argparse
 import numpy as np
+import pandas as pd
+from scipy.stats import entropy
 from PIL import Image
 
 
 def calculate_entropy(path_to_file):
     ##### Get source bytes
     try:
-        with open(path_to_file) as source:
+        with open(path_to_file, 'rb') as source:
             source_string = source.read()
             source_bytes = bytes(source_string, 'utf-8')
             byte_array = np.frombuffer(source_bytes, dtype=np.uint8)
     ##### Handle except if image is received.
-    except UnicodeDecodeError:
+    except TypeError:
         image_array = np.array(Image.open(path_to_file))
         byte_array = image_array.flatten()
 
-    ##### Create dictionary form source
-    symbols, counts = np.unique(byte_array, return_counts=True)
-    source_dict = dict(zip(symbols, counts))
+    ##### Count values
+    source_series = pd.Series(byte_array)
+    counts = source_series.value_counts()
 
-    ##### Compute symbols probabilities
-    samples_amount = len(byte_array)
-    probabilities = np.fromiter(source_dict.values(), dtype=np.uint8)/samples_amount
-    entropy = np.sum([(-p * math.log(p, 2)) for p in probabilities])
+    ##### Compute entropy
+    source_entropy = entropy(counts, base=2)
 
-    return entropy    
+    return source_entropy    
 
 
 
