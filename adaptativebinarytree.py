@@ -84,15 +84,18 @@ class AdaptativeBinaryTree():
     def sibling_property(self):
         node_with_smallest_weight = self.nodes[1]
         node_with_greater_weight = None
+        nodes_to_be_replaced = []
 
         for node in self.nodes[2:-1]:
             if node.weight < node_with_smallest_weight.weight:
                 node_with_smallest_weight = node
             elif node.weight > node_with_smallest_weight.weight:
                 node_with_greater_weight = node
-        
-        if node_with_greater_weight is not None:
-            self.vectorized_prefix_replacing(node_with_smallest_weight.bitstream, node_with_greater_weight.bitstream)
+                if not node_with_greater_weight.bitstream.startswith(node_with_smallest_weight.bitstream):
+                    nodes_to_be_replaced = [node_with_smallest_weight, node_with_greater_weight]
+
+        if nodes_to_be_replaced != []:
+            self.vectorized_prefix_replacing(nodes_to_be_replaced[0].bitstream, nodes_to_be_replaced[1].bitstream)
             self.correct_node_numbers()
             ##### Return True to sinalize that a new weight update is required
             return True
