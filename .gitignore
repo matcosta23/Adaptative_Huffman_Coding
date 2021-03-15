@@ -3,3 +3,5 @@ FilesToCompress/
 binary_files/
 __pycache__/
 decoded_files/
+GZipCompression/
+run_all_files.sh
