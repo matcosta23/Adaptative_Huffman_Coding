@@ -11,12 +11,12 @@ from PIL import Image
 def calculate_entropy(path_to_file):
     ##### Get source bytes
     try:
-        with open(path_to_file, 'rb') as source:
+        with open(path_to_file) as source:
             source_string = source.read()
             source_bytes = bytes(source_string, 'utf-8')
             byte_array = np.frombuffer(source_bytes, dtype=np.uint8)
     ##### Handle except if image is received.
-    except TypeError:
+    except UnicodeDecodeError:
         image_array = np.array(Image.open(path_to_file))
         byte_array = image_array.flatten()
 
