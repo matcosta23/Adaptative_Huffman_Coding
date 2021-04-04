@@ -24,7 +24,7 @@ The AdaptativeBinaryTree class is implemented in the [adaptativebinarytree](adap
 To encode a file, the following command line should be excecuted.
 
 ```bash
-<python_version> encoder.py --file_to_compress <path_to_file> --binary_file_path <path_for_saving_binary_file>
+<python_version> huffman_encoder.py --file_to_compress <path_to_file> --binary_file_path <path_for_saving_binary_file>
 ```
 
 - *<python_version>* refers to your local python 3 version, inside the chosen environment.
@@ -34,7 +34,7 @@ To encode a file, the following command line should be excecuted.
 The command line for decoding a binary file is analogous to the one used in the encoding process.
 
 ```bash
-<python_version> decoder.py --binary_file <path_to_binary> --decoded_file_path <path_for_saving_decoded_file>
+<python_version> huffman_decoder.py --binary_file <path_to_binary> --decoded_file_path <path_for_saving_decoded_file>
 ```
 
 - As with the command for encoding, only the argument *--binary_file* is required.
