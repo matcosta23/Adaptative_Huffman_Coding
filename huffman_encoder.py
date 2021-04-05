@@ -59,7 +59,7 @@ class HuffmanEncoder():
         print(f"Average rate: {mean_rate:.5f} bits per symbol.")
 
 
-    def encode_with_adaptative_hc(self):
+    def encode_with_adaptative_hc(self, verbose=True):
         ##### Define Auxiliary Function.
         def convert_string_to_boolean_list(string):
             bool_list = list(map(lambda bit: bool(int(bit)), list(string)))
@@ -72,7 +72,8 @@ class HuffmanEncoder():
         self.adaptative_binary_tree.insert_symbol(self.byte_array[0])
         self.bitstream.write(self.byte_array[0], np.uint8)
         ##### Encode remaining bitstream.
-        for byte in tqdm(self.byte_array[1:], desc="Encoding Progress"):
+        iterator = tqdm(self.byte_array[1:], desc="Encoding Progress") if verbose else self.byte_array[1:]
+        for byte in iterator:
             ##### Get symbol codeword
             byte_codeword = self.adaptative_binary_tree.get_symbol_codeword(byte)
             ##### If symbol is new, codeword for NYT and symbol's byte should be sent.
@@ -87,7 +88,8 @@ class HuffmanEncoder():
             self.adaptative_binary_tree.insert_symbol(byte)
 
         encoding_finish = time.time()
-        self.__print_process_duration(encoding_start, encoding_finish, "Encoding Process")
+        if verbose:
+            self.__print_process_duration(encoding_start, encoding_finish, "Encoding Process")
         
     
     ########## Private Methods

@@ -41,7 +41,7 @@ class HuffmanDecoder():
             raise TypeError("The provided bitstream should already be a bitstream.BitStream instance or a string.")
 
         
-    def decode_with_adaptative_hc(self):
+    def decode_with_adaptative_hc(self, verbose=True):
         ##### Measure decoding time.
         decoding_start = time.time()
 
@@ -75,7 +75,8 @@ class HuffmanDecoder():
                 bitstream_finished = True
 
         decoding_finish = time.time()
-        self.__print_process_duration(decoding_start, decoding_finish, "Decoding Time")
+        if verbose:
+            self.__print_process_duration(decoding_start, decoding_finish, "Decoding Time")
 
 
     def get_decoded_bytes(self):
