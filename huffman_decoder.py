@@ -13,10 +13,10 @@ from adaptativebinarytree import AdaptativeBinaryTree
 
 class HuffmanDecoder():
 
-    def __init__(self, binary_path, decoded_file_path):
+    def __init__(self, binary_path=None, decoded_file_path=None, symbols_amount=2**8):
         self.binary_path = binary_path
         self.decoded_file_path = decoded_file_path
-        self.adaptative_binary_tree = AdaptativeBinaryTree(2**8)
+        self.adaptative_binary_tree = AdaptativeBinaryTree(symbols_amount)
 
     
     def decode_binary(self):
@@ -25,43 +25,23 @@ class HuffmanDecoder():
         ##### Decode header
         self.__decode_header()
         ##### Decode remaining bitstream.
-        self.__decode_with_adaptative_hc()
+        self.decode_with_adaptative_hc()
         ##### Save decoded file
         self.__save_decoded_file()
 
 
-    ########## Private Methods
-    def __read_binary_file(self):
-        with open(self.binary_path, "rb") as bin_file:
-            str_bitstream = bin_file.read().decode()
-            bool_list = list(map(lambda bit: bool(int(bit)), list(str_bitstream)))
+    def read_bitstream(self, bitstream):
+        if isinstance(bitstream, BitStream):
+            self.bitstream = bitstream
+        elif isinstance(bitstream, str):
+            bool_list = list(map(lambda bit: bool(int(bit)), list(bitstream)))
             self.bitstream = BitStream()
             self.bitstream.write(bool_list)
-
-
-    def __decode_header(self):
-        ##### Verify if file is image or text.
-        self.image_file = self.bitstream.read(bool, 1)[0]
-
-        # TODO: Test image header decoding.
-        if self.image_file:
-            ##### Check if image has 1 or 3 channels.
-            self.three_channel_image = self.bitstream.read(bool, 1)[0]
-            ##### Check if difference is positive
-            positive_difference = self.bitstream.read(bool, 1)[0]
-            ##### Read digits amount in difference value.
-            digits_amount_bool_list = self.bitstream.read(bool, 4)
-            digits_amount = int(self.__convert_bool_list_to_str(digits_amount_bool_list), 2)
-            #### Read difference
-            diff_str = ''
-            for digit in range(digits_amount):
-                digit_bool_list = self.bitstream.read(bool, 4)
-                str_digit = str(int(self.__convert_bool_list_to_str(digit_bool_list)))
-                diff_str += str_digit
-            self.difference = int(diff_str) if positive_difference else (-int(diff_str))
+        else:
+            raise TypeError("The provided bitstream should already be a bitstream.BitStream instance or a string.")
 
         
-    def __decode_with_adaptative_hc(self):
+    def decode_with_adaptative_hc(self):
         ##### Measure decoding time.
         decoding_start = time.time()
 
@@ -96,6 +76,41 @@ class HuffmanDecoder():
 
         decoding_finish = time.time()
         self.__print_process_duration(decoding_start, decoding_finish, "Decoding Time")
+
+
+    def get_decoded_bytes(self):
+        return self.decoded_bytes
+
+
+    ########## Private Methods
+    def __read_binary_file(self):
+        with open(self.binary_path, "rb") as bin_file:
+            str_bitstream = bin_file.read().decode()
+            bool_list = list(map(lambda bit: bool(int(bit)), list(str_bitstream)))
+            self.bitstream = BitStream()
+            self.bitstream.write(bool_list)
+
+
+    def __decode_header(self):
+        ##### Verify if file is image or text.
+        self.image_file = self.bitstream.read(bool, 1)[0]
+
+        # TODO: Test image header decoding.
+        if self.image_file:
+            ##### Check if image has 1 or 3 channels.
+            self.three_channel_image = self.bitstream.read(bool, 1)[0]
+            ##### Check if difference is positive
+            positive_difference = self.bitstream.read(bool, 1)[0]
+            ##### Read digits amount in difference value.
+            digits_amount_bool_list = self.bitstream.read(bool, 4)
+            digits_amount = int(self.__convert_bool_list_to_str(digits_amount_bool_list), 2)
+            #### Read difference
+            diff_str = ''
+            for digit in range(digits_amount):
+                digit_bool_list = self.bitstream.read(bool, 4)
+                str_digit = str(int(self.__convert_bool_list_to_str(digit_bool_list)))
+                diff_str += str_digit
+            self.difference = int(diff_str) if positive_difference else (-int(diff_str))
 
 
     def __save_decoded_file(self):

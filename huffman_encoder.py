@@ -15,25 +15,36 @@ from adaptativebinarytree import AdaptativeBinaryTree
 
 class HuffmanEncoder():
 
-    def __init__(self, source_path, bitstream_path):
+    def __init__(self, source_path=None, bitstream_path=None, symbols_amount=2**8):
         self.source_path = source_path
         self.bitstream_path = bitstream_path
         
         # NOTE: It will be adopted as standard to use bytes as symbols.
-        self.adaptative_binary_tree = AdaptativeBinaryTree(2**8)
+        self.adaptative_binary_tree = AdaptativeBinaryTree(symbols_amount)
 
 
     def encode_source(self):
         ##### Get info about the source
-        self.__get_source_info()
+        self.__get_source_info_from_file()
         ##### Instantiate bitstream
-        self.bitstream = BitStream()
+        self.instantiate_bitstream()
         ##### Encode Header
         self.__encode_header()
         ##### Encode source with Adaptative Huffman Coding.
-        self.__encode_with_adaptative_hc()
+        self.encode_with_adaptative_hc()
         ##### Save binary file
         self.__save_binary_file()
+
+    
+    def read_sequence_array(self, sequence):
+        self.byte_array = sequence
+
+    
+    def instantiate_bitstream(self):
+        self.bitstream = BitStream()
+
+    def get_binary_string(self):
+        return self.bitstream.__str__()
 
 
     def show_average_rate(self):
@@ -46,10 +57,41 @@ class HuffmanEncoder():
         symbols_encoded = len(self.byte_array)
         mean_rate = bitstream_length/symbols_encoded
         print(f"Average rate: {mean_rate:.5f} bits per symbol.")
+
+
+    def encode_with_adaptative_hc(self):
+        ##### Define Auxiliary Function.
+        def convert_string_to_boolean_list(string):
+            bool_list = list(map(lambda bit: bool(int(bit)), list(string)))
+            return bool_list
+
+        ##### Measure encoding time.
+        encoding_start = time.time()
+
+        ##### Encode first symbol
+        self.adaptative_binary_tree.insert_symbol(self.byte_array[0])
+        self.bitstream.write(self.byte_array[0], np.uint8)
+        ##### Encode remaining bitstream.
+        for byte in tqdm(self.byte_array[1:], desc="Encoding Progress"):
+            ##### Get symbol codeword
+            byte_codeword = self.adaptative_binary_tree.get_symbol_codeword(byte)
+            ##### If symbol is new, codeword for NYT and symbol's byte should be sent.
+            if byte_codeword is None:
+                nyt_codeword = self.adaptative_binary_tree.get_codeword_for_nyt()
+                self.bitstream.write(convert_string_to_boolean_list(nyt_codeword))
+                self.bitstream.write(byte, np.uint8)
+            ##### If symbol exists, send its codeword.
+            else:
+                self.bitstream.write(convert_string_to_boolean_list(byte_codeword))
+            ##### After getting the codeword, update Tree.
+            self.adaptative_binary_tree.insert_symbol(byte)
+
+        encoding_finish = time.time()
+        self.__print_process_duration(encoding_start, encoding_finish, "Encoding Process")
         
     
     ########## Private Methods
-    def __get_source_info(self):
+    def __get_source_info_from_file(self):
         # NOTE: Two approaches will be adopted for reading images and text files.
         ##### Trying to read as text:
         try:
@@ -101,40 +143,10 @@ class HuffmanEncoder():
         self.header_length = len(self.bitstream.__str__())
 
 
-    def __encode_with_adaptative_hc(self):
-        ##### Define Auxiliary Function.
-        def convert_string_to_boolean_list(string):
-            bool_list = list(map(lambda bit: bool(int(bit)), list(string)))
-            return bool_list
-
-        ##### Measure encoding time.
-        encoding_start = time.time()
-
-        ##### Encode first symbol
-        self.adaptative_binary_tree.insert_symbol(self.byte_array[0])
-        self.bitstream.write(self.byte_array[0], np.uint8)
-        ##### Encode remaining bitstream.
-        for byte in tqdm(self.byte_array[1:], desc="Encoding Progress"):
-            ##### Get symbol codeword
-            byte_codeword = self.adaptative_binary_tree.get_symbol_codeword(byte)
-            ##### If symbol is new, codeword for NYT and symbol's byte should be sent.
-            if byte_codeword is None:
-                nyt_codeword = self.adaptative_binary_tree.get_codeword_for_nyt()
-                self.bitstream.write(convert_string_to_boolean_list(nyt_codeword))
-                self.bitstream.write(byte, np.uint8)
-            ##### If symbol exists, send its codeword.
-            else:
-                self.bitstream.write(convert_string_to_boolean_list(byte_codeword))
-            ##### After getting the codeword, update Tree.
-            self.adaptative_binary_tree.insert_symbol(byte)
-
-        encoding_finish = time.time()
-        self.__print_process_duration(encoding_start, encoding_finish, "Encoding Process")
-
-
     def __save_binary_file(self):
         with open(self.bitstream_path, "wb") as bin_file:
-            bin_file.write(self.bitstream.__str__().encode())
+            binary_string = get_binary_string()
+            bin_file.write(binary_string.encode())
             bin_file.close()
 
 
